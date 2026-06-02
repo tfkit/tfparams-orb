@@ -1,0 +1,109 @@
+description: >
+  Download the tfparams release binary (Linux/macOS) and generate a parameter
+  sheet. Run this after producing the plan JSON and terraform-docs output.
+
+parameters:
+  version:
+    type: string
+    default: "latest"
+    description: tfparams release to use (e.g. v0.1.1) or "latest".
+  plan-json:
+    type: string
+    description: Path to the plan JSON (terraform show -json <planfile>).
+  docs-json:
+    type: string
+    description: Path to the terraform-docs JSON output.
+  out:
+    type: string
+    default: "PARAMETERS.md"
+    description: Output file path. Use "-" for stdout.
+  format:
+    type: enum
+    enum: ["markdown", "csv", "json"]
+    default: "markdown"
+    description: Output format.
+  scope:
+    type: enum
+    enum: ["root", "module"]
+    default: "root"
+    description: root variables or module-passed values.
+  module:
+    type: string
+    default: ""
+    description: Module call name when scope=module.
+  env:
+    type: string
+    default: ""
+    description: Environment name shown in the header.
+  extra-args:
+    type: string
+    default: ""
+    description: Additional raw tfparams arguments (appended verbatim).
+  working-directory:
+    type: string
+    default: "."
+    description: Directory to run tfparams in.
+  store-artifact:
+    type: boolean
+    default: false
+    description: Upload the generated sheet as a CircleCI build artifact.
+
+steps:
+  - run:
+      name: "tfparams: generate parameter sheet"
+      working_directory: << parameters.working-directory >>
+      environment:
+        TFPARAMS_VERSION: << parameters.version >>
+        IN_PLAN: << parameters.plan-json >>
+        IN_DOCS: << parameters.docs-json >>
+        IN_OUT: << parameters.out >>
+        IN_FORMAT: << parameters.format >>
+        IN_SCOPE: << parameters.scope >>
+        IN_MODULE: << parameters.module >>
+        IN_ENV: << parameters.env >>
+        IN_ARGS: << parameters.extra-args >>
+      command: |
+        set -euo pipefail
+
+        ver="$TFPARAMS_VERSION"
+        if [ "$ver" = "latest" ]; then
+          # Resolve the latest tag by following the /releases/latest redirect
+          # (no GitHub token required).
+          ver="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/tfparam/tfparams/releases/latest | sed 's#.*/tag/##')"
+        fi
+
+        os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+        arch="$(uname -m)"
+        case "$arch" in
+          x86_64|amd64) arch="amd64" ;;
+          aarch64|arm64) arch="arm64" ;;
+          *) echo "unsupported architecture: $arch" >&2; exit 1 ;;
+        esac
+        case "$os" in
+          linux|darwin) ;;
+          *) echo "unsupported OS: $os (this orb supports Linux and macOS executors)" >&2; exit 1 ;;
+        esac
+
+        asset="tfparams_${os}_${arch}.tar.gz"
+        dir="$(mktemp -d)"
+        echo "Installing tfparams ${ver} (${asset})"
+        curl -fsSL "https://github.com/tfparam/tfparams/releases/download/${ver}/${asset}" -o "${dir}/${asset}"
+        tar -xzf "${dir}/${asset}" -C "${dir}" tfparams
+        bin="${dir}/tfparams"
+
+        cmd=("$bin" --plan-json "$IN_PLAN" --docs-json "$IN_DOCS" --format "$IN_FORMAT" --scope "$IN_SCOPE")
+        if [ -n "$IN_OUT" ] && [ "$IN_OUT" != "-" ]; then cmd+=(--out "$IN_OUT"); fi
+        if [ -n "$IN_MODULE" ]; then cmd+=(--module "$IN_MODULE"); fi
+        if [ -n "$IN_ENV" ]; then cmd+=(--env "$IN_ENV"); fi
+        if [ -n "$IN_ARGS" ]; then
+          # shellcheck disable=SC2206
+          extra=($IN_ARGS)
+          cmd+=("${extra[@]}")
+        fi
+        printf 'Running:'; printf ' %q' "${cmd[@]}"; printf '\n'
+        "${cmd[@]}"
+  - when:
+      condition: << parameters.store-artifact >>
+      steps:
+        - store_artifacts:
+            path: << parameters.working-directory >>/<< parameters.out >>

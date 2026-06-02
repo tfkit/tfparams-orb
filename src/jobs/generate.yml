@@ -1,0 +1,59 @@
+description: >
+  Checkout, generate a tfparams parameter sheet from existing plan/docs JSON,
+  and (by default) store it as a build artifact. For setups that produce the
+  plan/docs JSON in CI, call the `generate` command from your own job instead.
+
+parameters:
+  executor:
+    type: executor
+    default: default
+  version:
+    type: string
+    default: "latest"
+  plan-json:
+    type: string
+  docs-json:
+    type: string
+  out:
+    type: string
+    default: "PARAMETERS.md"
+  format:
+    type: enum
+    enum: ["markdown", "csv", "json"]
+    default: "markdown"
+  scope:
+    type: enum
+    enum: ["root", "module"]
+    default: "root"
+  module:
+    type: string
+    default: ""
+  env:
+    type: string
+    default: ""
+  extra-args:
+    type: string
+    default: ""
+  working-directory:
+    type: string
+    default: "."
+  store-artifact:
+    type: boolean
+    default: true
+
+executor: << parameters.executor >>
+
+steps:
+  - checkout
+  - generate:
+      version: << parameters.version >>
+      plan-json: << parameters.plan-json >>
+      docs-json: << parameters.docs-json >>
+      out: << parameters.out >>
+      format: << parameters.format >>
+      scope: << parameters.scope >>
+      module: << parameters.module >>
+      env: << parameters.env >>
+      extra-args: << parameters.extra-args >>
+      working-directory: << parameters.working-directory >>
+      store-artifact: << parameters.store-artifact >>

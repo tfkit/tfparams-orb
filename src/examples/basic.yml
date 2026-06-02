@@ -1,0 +1,30 @@
+description: >
+  Produce the plan JSON and terraform-docs output in CI, then use the tfparams
+  `generate` command to render a parameter sheet and store it as an artifact.
+
+usage:
+  version: 2.1
+  orbs:
+    tfparams: tfparam/tfparams@1.0.0
+  jobs:
+    parameter-sheet:
+      docker:
+        - image: cimg/base:current
+      steps:
+        - checkout
+        - run:
+            name: Produce plan JSON and terraform-docs output
+            command: |
+              terraform plan -out=tfplan
+              terraform show -json tfplan > plan.json
+              terraform-docs json . > docs.json
+        - tfparams/generate:
+            plan-json: plan.json
+            docs-json: docs.json
+            out: PARAMETERS.md
+            env: production
+            store-artifact: true
+  workflows:
+    main:
+      jobs:
+        - parameter-sheet

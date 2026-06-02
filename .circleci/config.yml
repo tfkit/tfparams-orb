@@ -1,0 +1,66 @@
+version: 2.1
+
+# Orb development pipeline.
+#
+# `validate` runs on every push and tag: it packs src/ into orb.yml and
+# validates it. `publish` runs ONLY on version tags (vX.Y.Z) and publishes the
+# packed orb at that version.
+#
+# One-time prerequisites (done by a maintainer with a CircleCI account):
+#   1. Connect this repo to CircleCI.
+#   2. Claim the namespace:   circleci namespace create tfparam github tfparam
+#   3. Register the orb:      circleci orb create tfparam/tfparams
+#   4. Create a context named "orb-publishing" holding a CIRCLE_TOKEN
+#      (a CircleCI personal API token) used by the publish job.
+
+executors:
+  cli:
+    docker:
+      - image: cimg/base:current
+
+commands:
+  install-cli:
+    steps:
+      - run:
+          name: Install the CircleCI CLI
+          command: curl -fLSs https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/main/install.sh | sudo bash
+
+jobs:
+  validate:
+    executor: cli
+    steps:
+      - checkout
+      - install-cli
+      - run:
+          name: Pack and validate the orb
+          command: |
+            circleci orb pack src > orb.yml
+            circleci orb validate orb.yml
+
+  publish:
+    executor: cli
+    steps:
+      - checkout
+      - install-cli
+      - run:
+          name: Pack and publish the orb at the tag version
+          command: |
+            circleci orb pack src > orb.yml
+            circleci orb publish orb.yml "tfparam/tfparams@${CIRCLE_TAG#v}" --token "$CIRCLE_TOKEN"
+
+workflows:
+  build-and-publish:
+    jobs:
+      - validate:
+          filters:
+            tags:
+              only: /.*/
+      - publish:
+          requires:
+            - validate
+          context: orb-publishing
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+$/

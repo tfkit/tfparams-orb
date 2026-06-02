@@ -1,0 +1,7 @@
+description: >
+  Small Linux executor with the tools tfparams needs (curl, tar). Override with
+  your own executor if you produce the plan JSON / terraform-docs output in the
+  same job.
+
+docker:
+  - image: cimg/base:current
