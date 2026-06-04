@@ -6,12 +6,12 @@ version: 2.1
 # validates it. `publish` runs ONLY on version tags (vX.Y.Z) and publishes the
 # packed orb at that version.
 #
-# One-time prerequisites (done by a maintainer with a CircleCI account):
+# One-time prerequisites (done by a maintainer with a CircleCI account) — see SETUP.md:
 #   1. Connect this repo to CircleCI.
-#   2. Claim the namespace:   circleci namespace create tfparam github tfparam
-#   3. Register the orb:      circleci orb create tfparam/tfparams
-#   4. Create a context named "orb-publishing" holding a CIRCLE_TOKEN
+#   2. Create a context named "orb-publishing" holding a CIRCLE_TOKEN
 #      (a CircleCI personal API token) used by the publish job.
+# The namespace (tfparam) and the orb (tfparam/tfparams) are created
+# automatically and idempotently by the publish job below.
 
 executors:
   cli:
@@ -42,6 +42,12 @@ jobs:
     steps:
       - checkout
       - install-cli
+      - run:
+          name: Ensure namespace and orb exist (idempotent)
+          command: |
+            # CIRCLE_TOKEN comes from the orb-publishing context.
+            circleci namespace create tfparam github tfparam --no-prompt || true
+            circleci orb create tfparam/tfparams --no-prompt || true
       - run:
           name: Pack and publish the orb at the tag version
           command: |
