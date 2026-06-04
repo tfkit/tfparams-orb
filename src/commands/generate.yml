@@ -69,7 +69,7 @@ steps:
         if [ "$ver" = "latest" ]; then
           # Resolve the latest tag by following the /releases/latest redirect
           # (no GitHub token required).
-          ver="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/tfparam/tfparams/releases/latest | sed 's#.*/tag/##')"
+          ver="$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/tfkit/tfparams/releases/latest | sed 's#.*/tag/##')"
         fi
 
         os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -87,7 +87,7 @@ steps:
         asset="tfparams_${os}_${arch}.tar.gz"
         dir="$(mktemp -d)"
         echo "Installing tfparams ${ver} (${asset})"
-        curl -fsSL "https://github.com/tfparam/tfparams/releases/download/${ver}/${asset}" -o "${dir}/${asset}"
+        curl -fsSL "https://github.com/tfkit/tfparams/releases/download/${ver}/${asset}" -o "${dir}/${asset}"
         tar -xzf "${dir}/${asset}" -C "${dir}" tfparams
         bin="${dir}/tfparams"
 

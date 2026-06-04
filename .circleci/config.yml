@@ -10,7 +10,7 @@ version: 2.1
 #   1. Connect this repo to CircleCI.
 #   2. Create a context named "orb-publishing" holding a CIRCLE_TOKEN
 #      (a CircleCI personal API token) used by the publish job.
-# The namespace (tfparam) and the orb (tfparam/tfparams) are created
+# The namespace (tfkit) and the orb (tfkit/tfparams) are created
 # automatically and idempotently by the publish job below.
 
 executors:
@@ -46,13 +46,13 @@ jobs:
           name: Ensure namespace and orb exist (idempotent)
           command: |
             # CIRCLE_TOKEN comes from the orb-publishing context.
-            circleci namespace create tfparam github tfparam --no-prompt || true
-            circleci orb create tfparam/tfparams --no-prompt || true
+            circleci namespace create tfkit github tfkit --no-prompt || true
+            circleci orb create tfkit/tfparams --no-prompt || true
       - run:
           name: Pack and publish the orb at the tag version
           command: |
             circleci orb pack src > orb.yml
-            circleci orb publish orb.yml "tfparam/tfparams@${CIRCLE_TAG#v}" --token "$CIRCLE_TOKEN"
+            circleci orb publish orb.yml "tfkit/tfparams@${CIRCLE_TAG#v}" --token "$CIRCLE_TOKEN"
 
 workflows:
   build-and-publish:

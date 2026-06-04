@@ -6,5 +6,5 @@ description: >
   tfparams release binary and runs it.
 
 display:
-  home_url: https://tfparam.github.io/tfparams/
-  source_url: https://github.com/tfparam/tfparams-orb
+  home_url: https://tfkit.github.io/tfparams/
+  source_url: https://github.com/tfkit/tfparams-orb

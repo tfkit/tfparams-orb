@@ -1,13 +1,13 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://tfparam.github.io/tfparams/logo-horizontal-dark.svg">
-    <img src="https://tfparam.github.io/tfparams/logo-horizontal.svg" alt="tfparams" width="320">
+    <source media="(prefers-color-scheme: dark)" srcset="https://tfkit.github.io/tfparams/logo-horizontal-dark.svg">
+    <img src="https://tfkit.github.io/tfparams/logo-horizontal.svg" alt="tfparams" width="320">
   </picture>
 </div>
 
 # tfparams-orb
 
-A [CircleCI Orb](https://circleci.com/developer/orbs) for [**tfparams**](https://github.com/tfparam/tfparams) —
+A [CircleCI Orb](https://circleci.com/developer/orbs) for [**tfparams**](https://github.com/tfkit/tfparams) —
 generate a Terraform parameter sheet from a plan JSON and terraform-docs metadata.
 
 The orb downloads the published `tfparams` release binary (Linux/macOS executors)
@@ -19,7 +19,7 @@ and runs it. The CLI version is configurable via the `version` parameter.
 version: 2.1
 
 orbs:
-  tfparams: tfparam/tfparams@1.0.0
+  tfparams: tfkit/tfparams@1.0.0
 
 jobs:
   parameter-sheet:
